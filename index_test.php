@@ -3,16 +3,27 @@ session_start();
 $errors = [];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (empty($_POST["name"]) || !preg_match("/^[а-яА-ЯёЁa-zA-Z ]+$/u", $POST["name"])) {
+    if (empty($_POST["name"]) || !preg_match("/^[а-яА-ЯёЁa-zA-Z ]+$/u", $_POST["name"])) {
         $errors[] = "Имя должно содержать только буквы и не должно быть пустым.";
     } else {
         $_SESSION["name"] = htmlspecialchars($_POST["name"]);
     }
 
-    if (empty($POST["age"]) || !filter_var($POST["age"], FILTER_VALIDATE_INT) || $POST["age"] < 1 || $POST["age"] > 100) {
+    if (empty($_POST["age"]) || !filter_var($_POST["age"], FILTER_VALIDATE_INT) || $_POST["age"] < 1 || $_POST["age"] > 100) {
         $errors[] = "Возраст должен быть числом от 1 до 100.";
     } else {
-        $_SESSION["age"] = intval($POST["age"]);
+        $_SESSION["age"] = intval($_POST["age"]);
+    }
+
+    if (empty($_POST["country"]) || !preg_match("/^[а-яА-ЯёЁa-zA-Z ]+$/u", $_POST["country"])){
+        $errors[] = "Страна должна содержать только буквы и не должна быть пустой.";
+    } else {
+        $_SESSION["country"] = htmlspecialchars($_POST["country"]);
+    }
+
+    if (empty($errors)){
+        header("Location: index_test.php");
+        exit();
     }
 }
 ?>
@@ -25,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <script>
         function validateForm(){
             const name = document.getElementById("name").value;
-            const age =document.getElementById("age").value;
+            const age = document.getElementById("age").value;
             const country = document.getElementById("country").value;
             const namePattern = /^[а-яА-ЯёЁa-zA-Z ]+$/u;
             const errors = [];
@@ -53,6 +64,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
     <h1>Данные пользователя</h1>
 
+    <?php
+        if (!empty($errors)){
+            echo "<ul style= 'color: red;'>";
+            foreach ($errors as $error) {
+                echo "<li>$error</li>";
+            }
+            echo "</ul>";
+        }
+    ?>
+
     <!-- Форма для ввода данных -->
     <form method="POST" action="index_test.php">
         <label for="name">Ваше имя: </label>
@@ -68,20 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </form>
 
     <?php
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        if (!empty($_POST['name']) && !empty($_POST['age']) && !empty($_POST['country'])) {
-            $_SESSION['name'] = htmlspecialchars($_POST['name']);
-            $_SESSION['age'] = intval($_POST['age']);
-            $_SESSION['country'] = htmlspecialchars($_POST['country']);
-            
-            
-            // Перенаправляем пользователя на ту же страницу, чтобы данные сбросились
-            header("Location: index_test.php");
-            exit();
-        } else {
-            echo "<p>Пожалуйста, заполните все поля.</p>";
-        }
-    }
+    
         if (isset($_SESSION['name']) && isset($_SESSION['age']) && isset($_SESSION['country'])){
             echo "<p>Здравствуйте, " . $_SESSION['name'] . "!</p>";
             echo "<p>Ваш возраст: " . $_SESSION['age'] . " лет.</p>";
@@ -90,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($_SESSION['country'] == "Россия") {
                 echo "<p>Слава России</p>";
             } else {
-                echo "<p>Чурка</p>";
+                echo "<p>Добро пожаловать!</p>";
             }
 
 
