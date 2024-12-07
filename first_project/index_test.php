@@ -1,45 +1,43 @@
 <?php
+// Подключаемся к базе данных
 include 'includes/db_connect.php';
 session_start();
 
-
+// Проверяем, была ли отправлена форма
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $errors = [] ;
+    $errors = []; // Массив для хранения ошибок
+
+    // Получаем данные из формы и обрабатываем их
     $name = trim($_POST['name']);
     $age = intval($_POST['age']);
     $country = trim($_POST['country']);
 
-
+    // Валидация данных на сервере
     if (!preg_match('/^[a-zA-Zа-яА-ЯёЁ ]+$/u', $name)) {
         $errors[] = 'Имя должно содержать только буквы.';
     }
-    if (!filter_var($age, FILTER_VALIDATE_INT) || $age <= 0){
+    if (!filter_var($age, FILTER_VALIDATE_INT) || $age <= 0) {
         $errors[] = 'Возраст должен быть положительным числом.';
     }
-    if (empty($country)){
+    if (empty($country)) {
         $errors[] = "Поле 'страна' не может быть пустым.";
     }
 
-    if (empty($errors)){
-
+    // Если ошибок нет, записываем данные в базу
+    if (empty($errors)) {
         $stmt = $conn->prepare("INSERT INTO users (name, age, country) VALUES (?, ?, ?)");
         $stmt->bind_param("sis", $name, $age, $country);
 
         if ($stmt->execute()) {
-            echo"<p>Данные успешно сохранены!</p>";
-    }else{
-        echo "<p>Ошибка: " . $stmt->error . "</p>";
-    }
+            echo "<p class='text-success'>Данные успешно сохранены!</p>";
+        } else {
+            echo "<p class='text-danger'>Ошибка: " . $stmt->error . "</p>";
+        }
+        $stmt->close();
 
-    $stmt->close();
-    header("Location: index_test.php");
-    exit();
-} else{
-    echo "<ul style='color:red;'>";
-    foreach ($errors as $error) {
-        echo "<li>$error</li>";
-    }
-    echo "</ul>";
+        // Перенаправляем пользователя обратно на страницу
+        header("Location: index_test.php");
+        exit();
     }
 }
 ?>
@@ -48,81 +46,67 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Обработка формы</title>
-    <script>
-        function validateForm(){
-            const name = document.getElementById("name").value;
-            const age = document.getElementById("age").value;
-            const country = document.getElementById("country").value;
-            const namePattern = /^[а-яА-ЯёЁa-zA-Z ]+$/u;
-            const errors = [];
-
-            if (!namePattern.test(name)) {
-                errors.push("Имя должно содержать только буквы.");
-            }
-            if (!/^\d+$/.test(age) || age < 1 || age > 100) {
-                errors.push("Возраст должен быть числом от 1 до 100.");
-            }
-            if (!namePattern.test(country)) {
-                errors.push("Страна должна содержать только буквы.");
-            }
-
-            if (errors.length > 0) {
-                alert(errors.join("\n"));
-                return false;
-            }
-
-            return true;
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма регистрации</title>
+    <!-- Подключаем Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Центрирование формы */
+        .form-container {
+            max-width: 600px; /* Ограничиваем ширину формы */
+            background: rgba(255, 255, 255, 0.1); /* Прозрачный фон для красоты */
+            padding: 60px; /* Отступы внутри формы */
+            border-radius: 10px; /* Скруглённые углы */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Тень для выделения формы */
         }
-    </script>
+
+        /* Для центрирования по всей странице */
+        .full-height {
+            height: 100vh; /* Высота страницы */
+        }
+    </style>
 </head>
-<body>
-    <h1>Данные пользователя</h1>
+<body class="bg-dark text-white">
+    <div class="d-flex justify-content-center align-items-center full-height">
+        <div class="form-container">
+            <h1 class="text-center mb-4">Регистрация</h1>
 
-    <?php
-        if (!empty($errors)){
-            echo "<ul style= 'color: red;'>";
-            foreach ($errors as $error) {
-                echo "<li>$error</li>";
-            }
-            echo "</ul>";
-        }
-    ?>
+            <!-- Вывод ошибок, если есть -->
+            <?php if (!empty($errors)): ?>
+                <div class="alert alert-danger">
+                    <ul>
+                        <?php foreach ($errors as $error): ?>
+                            <li><?= htmlspecialchars($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
 
-    <!-- Форма для ввода данных -->
-    <form method="POST" action="index_test.php">
-        <label for="name">Ваше имя: </label>
-        <input type="text" id="name" name="name" required><br><br>
+            <!-- Форма регистрации -->
+            <form method="POST" action="index_test.php">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Ваше имя:</label>
+                    <input type="text" id="name" name="name" class="form-control" required>
+                </div>
 
-        <label for="age">Ваш возраст: </label>
-        <input type="text" id="age" name="age" required><br><br>
+                <div class="mb-3">
+                    <label for="age" class="form-label">Ваш возраст:</label>
+                    <input type="text" id="age" name="age" class="form-control" required>
+                </div>
 
-        <label for="country">Ваша страна: </label>
-        <input type="text" id="country" name="country" required><br><br>
+                <div class="mb-3">
+                    <label for="country" class="form-label">Ваша страна:</label>
+                    <input type="text" id="country" name="country" class="form-control" required>
+                </div>
 
-        <button type="submit">Отправить</button>
-    </form>
+                <button type="submit" class="btn btn-primary w-100">Отправить</button>
+            </form>
 
-    <?php
-    
-        if (isset($_SESSION['name']) && isset($_SESSION['age']) && isset($_SESSION['country'])){
-            echo "<p>Здравствуйте, " . $_SESSION['name'] . "!</p>";
-            echo "<p>Ваш возраст: " . $_SESSION['age'] . " лет.</p>";
-            echo "<p>Ваша страна: " . $_SESSION['country'] . "</p>";
+            <!-- Кнопка перехода к списку пользователей -->
+            <a href="users.php" class="btn btn-secondary w-100 mt-3">Посмотреть пользователей</a>
+        </div>
+    </div>
 
-            if ($_SESSION['country'] == "Россия") {
-                echo "<p>Слава России</p>";
-            } else {
-                echo "<p>Добро пожаловать!</p>";
-            }
-
-
-            // Очищаем данные из сессии после их вывода
-            unset($_SESSION["name"], $_SESSION["age"], $_SESSION["country"]);
-    }
-    ?>
-
-    <a href="index_test.php">Вернуться к форме</a>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
